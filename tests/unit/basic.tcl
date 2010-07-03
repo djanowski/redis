@@ -169,7 +169,7 @@ start_server {tags {"basic"}} {
         append res [r exists emptykey]
         r del emptykey
         append res [r exists emptykey]
-    } {10}
+    } {00}
 
     test {Commands pipelining} {
         set fd [r channel]

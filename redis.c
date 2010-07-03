@@ -4472,21 +4472,31 @@ static void setGenericCommand(redisClient *c, int nx, robj *key, robj *val, robj
 
     touchWatchedKey(c->db,key);
     if (nx) deleteIfVolatile(c->db,key);
-    retval = dbAdd(c->db,key,val);
-    if (retval == REDIS_ERR) {
-        if (!nx) {
-            dbReplace(c->db,key,val);
-            incrRefCount(val);
-        } else {
-            addReply(c,shared.czero);
-            return;
-        }
+
+    /* If setting to an empty string, delete the key. */
+    if (val->encoding == REDIS_ENCODING_RAW && sdslen(val->ptr) == 0) {
+      if (dictFind(c->db->dict,key->ptr) != NULL) {
+        dbDelete(c->db,key);
+        server.dirty++;
+      }
     } else {
-        incrRefCount(val);
+      retval = dbAdd(c->db,key,val);
+      if (retval == REDIS_ERR) {
+          if (!nx) {
+              dbReplace(c->db,key,val);
+              incrRefCount(val);
+          } else {
+              addReply(c,shared.czero);
+              return;
+          }
+      } else {
+          incrRefCount(val);
+      }
+      server.dirty++;
+      removeExpire(c->db,key);
+      if (expire) setExpire(c->db,key,time(NULL)+seconds);
     }
-    server.dirty++;
-    removeExpire(c->db,key);
-    if (expire) setExpire(c->db,key,time(NULL)+seconds);
+
     addReply(c, nx ? shared.cone : shared.ok);
 }
 

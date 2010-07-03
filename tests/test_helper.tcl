@@ -78,6 +78,7 @@ proc main {} {
     execute_tests "unit/auth"
     execute_tests "unit/protocol"
     execute_tests "unit/basic"
+    execute_tests "unit/keys"
     execute_tests "unit/type/list"
     execute_tests "unit/type/set"
     execute_tests "unit/type/zset"
@@ -94,6 +95,7 @@ proc main {} {
     set ::global_overrides {vm-enabled yes}
     execute_tests "unit/protocol"
     execute_tests "unit/basic"
+    execute_tests "unit/keys"
     execute_tests "unit/type/list"
     execute_tests "unit/type/set"
     execute_tests "unit/type/zset"
@@ -102,7 +104,7 @@ proc main {} {
     execute_tests "unit/expire"
     execute_tests "unit/other"
     execute_tests "unit/cas"
-    
+
     puts "\n[expr $::passed+$::failed] tests, $::passed passed, $::failed failed"
     if {$::failed > 0} {
         puts "\n*** WARNING!!! $::failed FAILED TESTS ***\n"
