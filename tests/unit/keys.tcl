@@ -33,4 +33,11 @@ start_server {tags {"keys"}} {
 
         s changes_since_last_save
     } {0}
+
+    test {HSET setting a new field to an empty value removes the field} {
+        r hset foo field1 value1
+        r hset foo field2 {}
+
+        r hkeys foo
+    } {field1}
 }

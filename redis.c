@@ -7109,13 +7109,21 @@ static robj *hashTypeLookupWriteOrCreate(redisClient *c, robj *key) {
 
 /* ============================= Hash commands ============================== */
 static void hsetCommand(redisClient *c) {
-    int update;
+    int update = 0;
     robj *o;
 
     if ((o = hashTypeLookupWriteOrCreate(c,c->argv[1])) == NULL) return;
-    hashTypeTryConversion(o,c->argv,2,3);
-    hashTypeTryObjectEncoding(o,&c->argv[2], &c->argv[3]);
-    update = hashTypeSet(o,c->argv[2],c->argv[3]);
+
+    if (c->argv[3]->type == REDIS_ENCODING_RAW && sdslen(c->argv[3]->ptr) == 0) {
+        if (hashTypeExists(o,c->argv[2]) == 1) {
+          hashTypeDelete(o,c->argv[2]);
+        }
+    } else {
+        hashTypeTryConversion(o,c->argv,2,3);
+        hashTypeTryObjectEncoding(o,&c->argv[2], &c->argv[3]);
+        update = hashTypeSet(o,c->argv[2],c->argv[3]);
+    }
+
     addReply(c, update ? shared.czero : shared.cone);
     server.dirty++;
 }
